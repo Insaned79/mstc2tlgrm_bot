@@ -59,7 +59,7 @@ def parse_and_log_message(packet):
         logging.warning(f"Protobuf parsing error: {e}")
 
 
-def on_message(client, userdata, msg):
+def on_mqtt_message(client, userdata, msg):
     logging.info(f"Received binary message from topic {msg.topic}, length: {len(msg.payload)} bytes")
     # 1. Parse as ServiceEnvelope
     service_envelope = mqtt_pb2.ServiceEnvelope()
@@ -70,7 +70,7 @@ def on_message(client, userdata, msg):
         if packet.HasField("encrypted") and not packet.HasField("decoded"):
             encrypted = packet.encrypted
             packet_id = packet.id if packet.HasField("id") else 0
-            from_id = packet.from if packet.HasField("from") else 0
+            from_id = getattr(packet, 'from') if packet.HasField("from") else 0
             decrypted_payload = decrypt_payload_ctr(encrypted, packet_id, from_id)
             if decrypted_payload:
                 try:
@@ -92,7 +92,7 @@ def on_message(client, userdata, msg):
 def main():
     client = mqtt.Client()
     client.username_pw_set(config.MQTT_USERNAME, config.MQTT_PASSWORD)
-    client.on_message = on_message
+    client.on_message = on_mqtt_message
     client.connect(config.MQTT_BROKER, config.MQTT_PORT, 60)
     topic = config.MQTT_TOPIC
     client.subscribe(topic)

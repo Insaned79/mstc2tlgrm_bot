@@ -1,0 +1,19 @@
+# Example configuration file for mstc2tlgrm_bot
+
+TELEGRAM_BOT_TOKEN = "your_bot_token"
+
+# MQTT_TOPIC can use wildcards (#) to listen to multiple nodes at once.
+# For example, to listen to all events from all nodes in channel 2:
+# MQTT_TOPIC = "meshtastic/krd/2/e/#"
+# This is the recommended way to receive messages from multiple nodes.
+# Duplicate messages (e.g. retransmitted by different nodes) will NOT be sent again to Telegram due to built-in deduplication.
+MQTT_BROKER = "broker_address"
+MQTT_PORT = 1883
+MQTT_TOPIC = "meshtastic/krd/2/e/#"  # listen to all events from all nodes in channel 2
+
+# MQTT authentication
+MQTT_USERNAME = "mqtt_username"
+MQTT_PASSWORD = "mqtt_password"
+
+# Topic for JSON messages (used in log_mqtt.py)
+MQTT_JSON_TOPIC = "meshtastic/krd/2/json/#"  # Topic for JSON messages 
