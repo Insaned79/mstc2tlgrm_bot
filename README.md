@@ -1,4 +1,4 @@
-# mstc2tlgrm_bot
+# Meshtastic to Telegram Forwarder Bot
 
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
 ![License](https://img.shields.io/github/license/Insaned79/mstc2tlgrm_bot)
@@ -104,7 +104,7 @@ Please use [Issues](https://github.com/Insaned79/mstc2tlgrm_bot/issues) on GitHu
 
 ---
 
-# mstc2tlgrm_bot (Русская версия)
+# Бот-форвардер Meshtastic → Telegram (Русская версия)
 
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
 ![License](https://img.shields.io/github/license/Insaned79/mstc2tlgrm_bot)
