@@ -12,6 +12,7 @@ import queue
 import asyncio
 from collections import OrderedDict
 import re
+import time
 
 try:
     from meshtastic import mesh_pb2, portnums_pb2, mqtt_pb2
@@ -92,13 +93,15 @@ def format_meshtastic_message(packet):
                     ts_str = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
                 else:
                     ts_str = "N/A"
-                # Format text for HTML
+                # Format message for Telegram (HTML)
                 text_html = f"<b>{text}</b>"
-                return f"Text message from {from_id} to {to_id}: {text_html}\nRSSI: {rssi} | Hop start: {hop_start} | Hops away: {hops_away} | Time: {ts_str}", 'HTML'
+                msg = f"{ts_str}\n{text_html}\n{from_id} to {to_id}\nRSSI: {rssi}\nHop(s): {hop_start}, away: {hops_away}"
+                return msg, 'HTML'
     except Exception as e:
         logging.warning(f"Protobuf parsing error: {e}")
     return None, None
 
+# Cache for recent message ids to prevent duplicates
 def is_duplicate(packet_id, max_size=RECENT_IDS_MAX):
     if packet_id in recent_ids:
         return True
@@ -154,11 +157,33 @@ def on_mqtt_message(client, userdata, msg):
         logging.warning(f"ServiceEnvelope parsing error: {e}")
         logging.info(f"MQTT message not sent: ServiceEnvelope parsing error.")
 
+def on_mqtt_disconnect(client, userdata, rc):
+    if rc != 0:
+        logging.warning(f"MQTT disconnected (rc={rc}). Will attempt to reconnect...")
+    else:
+        logging.info("MQTT disconnected cleanly.")
+    delay = config.MQTT_RECONNECT_DELAY
+    while True:
+        try:
+            client.reconnect()
+            logging.info("MQTT reconnected successfully.")
+            client.subscribe(config.MQTT_TOPIC)
+            logging.info(f"Resubscribed to topic: {config.MQTT_TOPIC}")
+            break
+        except Exception as e:
+            logging.error(f"MQTT reconnect failed: {e}. Next attempt in {delay} seconds.")
+            time.sleep(delay)
+
 def mqtt_thread():
     client = mqtt.Client()
     client.username_pw_set(config.MQTT_USERNAME, config.MQTT_PASSWORD)
     client.on_message = on_mqtt_message
-    client.connect(config.MQTT_BROKER, config.MQTT_PORT, 60)
+    client.on_disconnect = on_mqtt_disconnect
+    try:
+        client.connect(config.MQTT_BROKER, config.MQTT_PORT, 60)
+    except Exception as e:
+        logging.error(f"Initial MQTT connect failed: {e}")
+        # Reconnection attempts will be handled by on_disconnect
     topic = config.MQTT_TOPIC
     client.subscribe(topic)
     logging.info(f"Subscribed to binary topic: {topic}")

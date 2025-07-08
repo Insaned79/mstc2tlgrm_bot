@@ -17,3 +17,6 @@ MQTT_PASSWORD = "mqtt_password"
 
 # Topic for JSON messages (used in log_mqtt.py)
 MQTT_JSON_TOPIC = "meshtastic/krd/2/json/#"  # Topic for JSON messages 
+
+# Reconnect delay in seconds for MQTT reconnection attempts
+MQTT_RECONNECT_DELAY = 5  # Delay between reconnect attempts (seconds) 
