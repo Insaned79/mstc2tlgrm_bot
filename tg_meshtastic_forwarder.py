@@ -124,6 +124,11 @@ def on_mqtt_message(client, userdata, msg):
             logging.info(f"MQTT received: id={log_id}, from={log_from}, to={log_to}, portnum={log_portnum}, len={len(msg.payload)}")
         except Exception as e:
             logging.warning(f"Failed to log MQTT message meta: {e}")
+        # Filter: only forward broadcast messages
+        to_id = getattr(packet, 'to', None)
+        if to_id != 4294967295:
+            logging.info(f"MQTT message id={getattr(packet, 'id', None)} not sent: not broadcast (to={to_id})")
+            return
         # Check for duplicate by id
         packet_id = packet.id if hasattr(packet, 'id') else None
         if packet_id is not None and is_duplicate(packet_id):
@@ -152,7 +157,7 @@ def on_mqtt_message(client, userdata, msg):
         if text:
             message_queue.put((text, parse_mode))
         else:
-            logging.info(f"MQTT message id={packet_id} not sent: not a text message or failed to format.")
+            logging.info(f"MQTT message id={getattr(packet, 'id', None)} not sent: not a text message or failed to format.")
     except Exception as e:
         logging.warning(f"ServiceEnvelope parsing error: {e}")
         logging.info(f"MQTT message not sent: ServiceEnvelope parsing error.")
